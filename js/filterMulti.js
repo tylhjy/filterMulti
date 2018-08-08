@@ -1,4 +1,148 @@
-function getFilterParams(){
+//设置筛选响应函数，加载完筛选参数后调用
+function ChooseParams()
+{
+    $(".multiple span").click(function(){
+        var that=$(this);
+        if(that.text()!="自定义:"&&that.text()!="--"){
+          if(that.hasClass("whole")){
+              $(this).addClass("current").siblings().removeClass("current");
+          }else{
+              if(that.hasClass("current")){
+                that.removeClass("current");
+                that.parent().find(".whole").removeClass("current");
+             }else{
+                that.addClass("current");
+                that.parent().find(".whole").removeClass("current");
+             }
+          }
+          SelectParams()
+        }
+  })
+  $(".single span").click(function(){
+      if($(this).text()!="自定义:"&&($(this).text()!="--")) {
+        $(this).addClass("current").siblings().removeClass("current");
+        SelectParams()
+      }
+  })
+
+  $(".input_button").click(function(){
+    input_div = $(this).parent()
+    check = 0;
+    input_count = 0
+    $.each(input_div.children(),function(k,v){
+      if($(this).prop('tagName').toLowerCase()=="input"){
+        input_count = input_count + 1
+        if($(this).val()==""){
+          $(this).attr("placeholder","请输入内容")
+        }else{
+          $(this).addClass("udefine")
+          check = check +1
+        }
+      }
+    });
+
+    if(check==input_count&&($(this).parent().parent().parent().hasClass('single'))){
+      $(this).parent().siblings().removeClass("current")
+      SelectParams()
+    } else if(check==input_count&&($(this).parent().parent().parent().hasClass('multiple'))){
+      SelectParams()
+    }
+  });
+}
+
+//筛选条件获取并远程筛选函数
+function SelectParams(){
+  var query_dict = {'custom_choice':[]}
+    $(".search-list").children().each(function(k,v){
+      this_li = $(this)
+      $(this).children().each(function(k1,v1){
+        if($(this).prop('tagName').toLowerCase()=="div"){
+          param_key = $(this).attr('id')
+          query_dict[param_key] = {'name_choice':[],'value_choice':[]}
+        }
+      })
+    })
+
+    $(".current").each(function(k,v){
+      li_param = $(this).parent().parent()
+      div_param = $(this).parent()
+      if(li_param.hasClass('single')) {
+        if($(this).text()=='全部'){
+          query_dict[div_param.attr('id')]['name_choice'] = []
+        } else {
+          query_dict[div_param.attr('id')]['name_choice'] = []
+          query_dict[div_param.attr('id')]['name_choice'] = [$(this).attr('value')]
+          query_dict[div_param.attr('id')]['value_choice'] = [$(this).text()]
+        }
+      }
+      if(li_param.hasClass('multiple')) {
+        if($(this).text()=='全部'){
+          query_dict[div_param.attr('id')]['name_choice'] = []
+          query_dict[div_param.attr('id')]['value_choice'] = []
+        } else {
+          query_dict[div_param.attr('id')]['name_choice'].push($(this).attr('value'))
+          query_dict[div_param.attr('id')]['value_choice'].push($(this).text())
+        }
+      }
+    })
+
+    $(".udefine").each(function(k,v){
+      conditions = $(this).parent().siblings()
+      input_ok = true
+      that = $(this)
+      grand = $(this).parent().parent().parent()
+      if(grand.prop("tagName").toLowerCase()=='li'&&grand.hasClass('single')){
+        pass = false
+        $.each(conditions,function(c,d){
+          if($(this).hasClass('current')){
+            pass = true
+          }
+        })
+        if(pass){
+          input_ok = false
+          that.val("")
+        }
+      }
+      $.each(conditions,function(c,d){
+        if($(this).hasClass('whole')&&$(this).hasClass('current')){
+          input_ok = false
+          that.val("")
+        }
+      })
+      if(input_ok){
+        c_k = $(this).attr('id')
+        c_v = $(this).val()
+        query_dict['custom_choice'].push({'name':c_k,'value':c_v})
+      }
+    })
+
+    console.log(JSON.stringify(query_dict))
+
+    $.ajax({
+      type: "POST",
+      url: "../getfilterresult/",
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify(query_dict),
+      dataType: "json",
+      success: function (message) {
+        if (message.success == 'yes') {
+            var ulli = ""
+            for(i=0;i<message.papps.length;i++){
+               app = message.papps[i]
+               var li = '<li><a href="../thvapp_pay/?p_name='+app['name']+'"><img src="'+app['app_icon']+'"><span class="name">'+app['name']+'</span><br><span>功能支持:</span><span class="support">'+app['app_vapp_type']+'</span><br><span>所属类型:</span><span class="soft_type">'+app['app_buy_type']+'</span><div class="product_bottom"><span class="red">￥</span><span>'+app['unit_price']+'</span><span class="small">&nbsp;&nbsp;&nbsp;'+app['price_con']+'</span></div></a></li>'
+                ulli = ulli + li
+            }
+            $("#vvlist").html(ulli)
+        }
+      },
+      error: function (message) {
+        $("#request-process-patent").html("提交数据失败！")
+      }
+    })
+}
+
+//静态筛选条件设置
+function GetFilterParams(){
   //从后端获取筛选条件
   var filter_parmas = [
     {
@@ -131,7 +275,8 @@ function getFilterParams(){
   return filter_parmas
 }
 
-function renderFilter(filter_parmas){
+//静态设置筛选条件
+function RenderFilter(filter_parmas){
   // 渲染筛选栏
   $(".search-list li").remove();
   $.each(filter_parmas, function(idx, obj) {
@@ -188,11 +333,34 @@ function renderFilter(filter_parmas){
     li_param.append(div_params)
     $(".search-list").append(li_param)
   })
+  //动态筛选
+  //ChooseParams()
 }
 
 $(function () {
-  // 渲染筛选框
-  renderFilter(getFilterParams())
+  //静态渲染筛选框
+  RenderFilter(GetFilterParams())
+  //动态渲染筛选框
+  /*$.ajax({
+      type: "POST",
+      url: "../getfilterparams/",
+      contentType: "application/json; charset=utf-8",
+      data: JSON.stringify({}),
+      dataType: "json",
+      success: function (res) {
+        if (res.success=='yes') {
+            RenderFilter(res.filter_params)
+        }
+        else{
+            RenderFilter(GetFilterParams())
+        }
+      },
+      error: function (message) {
+        RenderFilter(GetFilterParams())
+      }
+  })*/
+
+  //静态筛选响应函数
   //多选
 	$(".multiple span").click(function(){
         var that=$(this);
@@ -275,7 +443,7 @@ $(function () {
           query_dict[div_param.attr('id')]['name_choice'] = []
           query_dict[div_param.attr('id')]['value_choice'] = []
         } else {
-          query_dict[div_param.attr('id')]['name_choice'].push([$(this).attr('value')])
+          query_dict[div_param.attr('id')]['name_choice'].push($(this).attr('value'))
           query_dict[div_param.attr('id')]['value_choice'].push($(this).text())
         }
       }
@@ -315,7 +483,7 @@ $(function () {
     console.log(JSON.stringify(query_dict))
 
     //远程筛选
-    $.ajax({
+    /*$.ajax({
       type: "POST",
       url: "getfilterresult",
       contentType: "application/json; charset=utf-8",
@@ -329,6 +497,6 @@ $(function () {
       error: function (message) {
         $("#request-process-patent").html("提交数据失败！")
       }
-    })
+    })*/
   }
 })
