@@ -62,12 +62,19 @@ img{
  	width: 100%;
  }
   .search-list>li{
-    margin-top: 20px;
+    margin-top: 10px;
     width: 100%;
     font-size: 16px;
     color: #4A4A4A;
-
-
+  }
+  .colspan{
+    text-decoration: none !important;
+    cursor: pointer;
+    color: #1915e4;
+    position: absolute;
+    /* margin-top: 10px; */
+    float: 0;
+    margin-top: 5px;
   }
  .y{
   	width: 887px;
@@ -75,8 +82,10 @@ img{
   }
  .search-list>li>div{
  	display: inline-block;
- 	 padding-bottom: 10px;
+ 	padding-bottom: 10px;
  	border-bottom: 1px dotted #D3D3D3;
+    overflow: hidden;
+    height: 27px;
  }
 .search-list>li>p{
   display: inline-block;

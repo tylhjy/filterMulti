@@ -48,6 +48,17 @@ function ChooseParams()
       SelectParams()
     }
   });
+
+  $(".colspan").click(function(){
+      div_cospan = $(this).prev()
+      if(div_cospan.css('height')!='auto'&&(div_cospan.css('height').split('px')[0])<40){
+        div_cospan.css('height','auto')
+        $(this).text('收缩')
+      } else {
+        div_cospan.css('height','27px')
+        $(this).text('展开')
+      }
+  })
 }
 
 //筛选条件获取并远程筛选函数
@@ -331,6 +342,16 @@ function RenderFilter(filter_parmas){
     }
 
     li_param.append(div_params)
+
+    if(obj.params.length>6){
+      colspan_html = $("<a></a>")
+      colspan_html.attr('id',obj.name+"_cospan")
+      colspan_html.text("展开")
+      colspan_html.addClass("colspan")
+      colspan_html.attr('href','javacript:void(0);')
+      li_param.append(colspan_html)
+    }
+
     $(".search-list").append(li_param)
   })
   //动态筛选
@@ -412,6 +433,16 @@ $(function () {
     }
   });
 
+  $(".colspan").click(function(){
+      div_cospan = $(this).prev()
+      if(div_cospan.css('height')!='auto'&&(div_cospan.css('height').split('px')[0])<40){
+        div_cospan.css('height','auto')
+        $(this).text('收缩')
+      } else {
+        div_cospan.css('height','27px')
+        $(this).text('展开')
+      }
+  })
   //获取搜索的json数据
   function GetSearchList(){
     var query_dict = {'custom_choice':[]}
